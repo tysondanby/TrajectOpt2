@@ -7,6 +7,7 @@ mutable struct wing <: AeroSurf
     chorddist::Vector{Any}   #Vector of chord lengths
     twistdist::Vector{Any}
     airfoils::Vector{Airfoil}    #Vector of airfiol objects
+    Sref
     #TODO: write an inner constructor for creating a wing using just the dihedral and sweep instead of "points"
 end
 
