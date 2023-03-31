@@ -6,6 +6,8 @@ mutable struct NACA4 <: Airfoil
     clpolar
     cdpolar
     cmpolar
+    clmax
+    clmin
 end
 
 mutable struct NACA6 <: Airfoil
@@ -14,6 +16,8 @@ mutable struct NACA6 <: Airfoil
     clpolar
     cdpolar
     cmpolar
+    clmax
+    clmin
 end
 
 mutable struct splineairfoil <: Airfoil
@@ -22,4 +26,6 @@ mutable struct splineairfoil <: Airfoil
     clpolar
     cdpolar
     cmpolar
+    clmax
+    clmin
 end 

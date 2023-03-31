@@ -1,6 +1,7 @@
 include("../Structs/Aircraft.jl")
 include("Geometry.jl")
 using Xfoil, LinearAlgebra
+#using Plots #TODO: TEMP
 
 #Generates polars for each airfoil on each wing. Finds Sref for each wing
 function aircraftpolars!(craft::basicaircraft,res,alphas)
@@ -28,13 +29,14 @@ function wingpolars!(w::wing,res,alphas)
 end
 
 function airfoilpolars!(foil::NACA4,res,alphas,AR)
+    #TODO First look up if this has already been computed
     x,y = NACA4points(foil.number)
-    foil.clpolar, foil.cdpolar, foil.cmpolar = pointstopolars(x,y,res,alphas,AR)
+    foil.clpolar, foil.cdpolar, foil.cmpolar, foil.clmax, foil.clmin = pointstopolars(x,y,res,alphas,AR)
 end
 
 function airfoilpolars!(foil::NACA6,res,alphas,AR)
     x,y = NACA6points(foil.number)
-    foil.clpolar, foil.cdpolar, foil.cmpolar = pointstopolars(x,y,res,alphas,AR)
+    foil.clpolar, foil.cdpolar, foil.cmpolar, foil.clmax, foil.clmin = pointstopolars(x,y,res,alphas,AR)
 end
 
 function airfoilpolars!(foil::splineairfoil,res,alphas,AR)
@@ -44,17 +46,19 @@ function airfoilpolars!(foil::splineairfoil,res,alphas,AR)
         push!(x,foil.points[i][1])
         push!(y,foil.points[i][2])
     end
-    foil.clpolar, foil.cdpolar, foil.cmpolar = pointstopolars(x,y,res,alphas,AR)
+    foil.clpolar, foil.cdpolar, foil.cmpolar, foil.clmax, foil.clmin = pointstopolars(x,y,res,alphas,AR)
 end
 
 #This is the entire polar from -180 to 180
 #Returns 3 2D polars (alpha and Re)
 function pointstopolars(x,y,res,alphas,AR)
+    clmax = 0.0
+    clmin = 0.0
     da = alphas[2]-alphas[1]
     na = length(alphas)
     Xfoil.set_coordinates(x,y)
     xr, yr = Xfoil.pane()
-
+    
     #alpha = -180:0.1:180 # range of angle of attacks, in degrees
     #re = 1e5 # Reynolds number
     clpolar = zeros(na,length(res))
@@ -75,20 +79,22 @@ function pointstopolars(x,y,res,alphas,AR)
     #endsweep = na
 
 
-    Threads.@threads for i = 1:1:length(res)
+    for i = 1:1:length(res)
         c_l = zeros(na)
         c_d = zeros(na)
         c_m = zeros(na)
         converged =zeros(Bool,na)
+        #println(xr)
+        #println(yr)
         c_l[startsweep:endsweep], c_d[startsweep:endsweep], c_dp, c_m[startsweep:endsweep], converged[startsweep:endsweep] = Xfoil.alpha_sweep(xr, yr, alphas[startsweep:endsweep], res[i], iter=100, zeroinit=false, printdata=false, reinit=true)
-        c_l, c_d,  c_m = fillplate!(c_l, c_d, c_m, converged,alphas,AR)#fillvit!(c_l, c_d, c_m, converged,alphas,AR)
+        c_l, c_d,  c_m, clmax, clmin = fillplate!(c_l, c_d, c_m, converged,alphas,AR)#fillvit!(c_l, c_d, c_m, converged,alphas,AR)
         #Assign results for this Re to the polars.
         clpolar[:,i] = c_l
         cdpolar[:,i] = c_d
         cmpolar[:,i] = c_m
     end
 
-    return clpolar, cdpolar, cmpolar
+    return clpolar, cdpolar, cmpolar, clmax, clmin
 end
 
 #Fills in viterna calulation for a polar. returns 3 1D polars (alphas varied at constant Re)
@@ -171,7 +177,9 @@ function fillplate!(cls,cds,cms,converged,alphas,AR)
     end
     convergedend = 0
     i = trunc(Int,length(alphas)/2)
+    #println(converged)
     failed = 0
+    #i = i +10
     while failed == 0
         if converged[i] == false
             convergedend = i-1
@@ -182,6 +190,7 @@ function fillplate!(cls,cds,cms,converged,alphas,AR)
     convergedbegin = 0
     i = trunc(Int,length(alphas)/2)
     failed = 0
+    #i = i -10
     while failed == 0
         if converged[i] == false
             convergedbegin = i+1
@@ -203,5 +212,5 @@ function fillplate!(cls,cds,cms,converged,alphas,AR)
     end
     
 
-    return cls,cds,cms
+    return cls,cds,cms, clmax, clmin
 end
