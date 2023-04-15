@@ -1,7 +1,7 @@
 abstract type Airfoil end
 
 mutable struct NACA4 <: Airfoil
-    number::Int16
+    number
     #polars are just vectors of equaly spaced coefficient values in [-pi:pi]
     clpolar
     cdpolar
@@ -11,7 +11,7 @@ mutable struct NACA4 <: Airfoil
 end
 
 mutable struct NACA6 <: Airfoil
-    number::Int32
+    number
     #polars are just vectors of equaly spaced coefficient values in [-pi:pi]
     clpolar
     cdpolar

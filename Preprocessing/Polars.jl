@@ -26,6 +26,7 @@ function wingpolars!(w::wing,res,alphas)
         airfoilpolars!(w.airfoils[i],res,alphas,AR)
     end
     w.Sref = S/2
+    #TODO: Assign polar to wing
 end
 
 function airfoilpolars!(foil::NACA4,res,alphas,AR)

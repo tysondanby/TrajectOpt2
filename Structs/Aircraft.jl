@@ -12,4 +12,8 @@ mutable struct basicaircraft <: Aircraft
     propulsion::Vector{Propulsion}  #Vector of propulsion objects
     control::Vector{Control}
     dynamics::Dynamics    #A function  for the dynamics
+    S #Reference area
+    c
+    name
+    reanalyzeaero
 end

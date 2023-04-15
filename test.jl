@@ -4,7 +4,7 @@ include("Preprocessing/Polars.jl")
 alphas = -180.0:0.5:180.0
 res = 100000:100000:200000
 emptypolar = zeros(length(alphas),length(res))
-defaultairfoil = NACA4(2412,emptypolar,emptypolar,emptypolar)
+defaultairfoil = NACA4(2412,emptypolar,emptypolar,emptypolar,0.0,0.0)
 origin = [0.0,0.0,0.0]
 defaultchord = [1.0,1.0]
 defaulttwist = [0.0,0.0]

@@ -1,3 +1,23 @@
+#AIRFOILS --------------------------------------------------------------------
+
+function airfoiltocamber(airfoil::NACA4)
+    #number = airfoil.number
+    naca = airfoil.number#"$number"
+    e = parse(Int64, naca[1])/100.0
+    p = parse(Int64, naca[2])/10.0
+    global testNACA = naca
+    global teste = e
+    global testp = p
+    return function (xc)
+        if xc < p # was <=, but causes problems at the leading edge of symmetric airfoils
+            ybar = e/p^2 * (2*p*xc - xc^2)
+        else
+            ybar = e/(1-p)^2 * (1 - 2*p + 2*p*xc - xc^2)
+        end
+        return ybar
+    end
+end
+
 function NACA4points(number)
         #TODO: This function comes from the ME 415 repository
         naca = "$number"
@@ -34,4 +54,25 @@ end
 function NACA6points(number)
     error("NACA6 not implimented")
     return x,y
+end
+
+#Aircraft ---------------------------------------------------------------------
+
+function reference(craft::basicaircraft)
+    sref = 0.0
+    cref = 0.0
+    for surf in craft.surfs
+        if surf isa wing
+            if surf.Sref > sref
+                sref = deepcopy(surf.Sref)
+            end
+            cwing = maximum(surf.chorddist)
+            if cwing > cref
+                cref = cwing
+            end
+        end
+    end
+    craft.S = sref #TODO: function name should be reference!() due to this line.
+    craft.c = cref
+    return sref,cref
 end
